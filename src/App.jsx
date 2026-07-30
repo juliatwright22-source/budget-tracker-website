@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider } from './context/BudgetContext'
+import { PreferencesProvider } from './context/PreferencesContext'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -75,7 +76,9 @@ export default function App() {
   return (
     <BrowserRouter basename="/budget-tracker-website">
       <AuthProvider>
-        <AppRoutes />
+        <PreferencesProvider>
+          <AppRoutes />
+        </PreferencesProvider>
       </AuthProvider>
     </BrowserRouter>
   )

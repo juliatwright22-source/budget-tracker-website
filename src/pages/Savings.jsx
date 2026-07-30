@@ -8,11 +8,13 @@ import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import ProgressBar from '../components/ui/ProgressBar'
-import { formatCurrency, formatDate, daysUntil } from '../lib/utils'
+import { daysUntil } from '../lib/utils'
+import { useFormat } from '../context/PreferencesContext'
 
 export default function Savings() {
   const { user } = useAuth()
   const { savingsGoals, reload } = useBudget()
+  const { formatCurrency, formatDate } = useFormat()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [fundsGoal, setFundsGoal] = useState(null)

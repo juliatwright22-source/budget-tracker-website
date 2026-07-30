@@ -18,7 +18,7 @@ export function BudgetProvider({ children }) {
     setLoading(true)
     const [tx, cats, budgets, savings] = await Promise.all([
       supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
-      supabase.from('categories').select('*').eq('user_id', user.id).order('created_at'),
+      supabase.from('categories').select('*').eq('user_id', user.id).order('display_order').order('created_at'),
       supabase.from('budget_goals').select('*').eq('user_id', user.id),
       supabase.from('savings_goals').select('*').eq('user_id', user.id).order('created_at'),
     ])

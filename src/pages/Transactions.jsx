@@ -7,10 +7,12 @@ import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import TransactionForm from '../components/features/TransactionForm'
-import { formatCurrency, formatDate, parseVoiceInput } from '../lib/utils'
+import { parseVoiceInput } from '../lib/utils'
+import { useFormat } from '../context/PreferencesContext'
 
 export default function Transactions() {
   const { transactions, categories, reload } = useBudget()
+  const { formatCurrency, formatDate } = useFormat()
   const [addOpen, setAddOpen] = useState(false)
   const [editTx, setEditTx] = useState(null)
   const [search, setSearch] = useState('')

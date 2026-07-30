@@ -10,7 +10,7 @@ export default function Onboarding() {
   const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [selected, setSelected] = useState(['Rent', 'Groceries', 'Transport', 'Other'])
+  const [selected, setSelected] = useState(['Rent/Mortgage', 'Groceries', 'Gas', 'Utilities'])
   const [custom, setCustom] = useState('')
 
   function toggleCategory(name) {
@@ -20,10 +20,10 @@ export default function Onboarding() {
   async function handleCategories() {
     const toInsert = DEFAULT_CATEGORIES
       .filter(c => selected.includes(c.name))
-      .map(c => ({ ...c, user_id: user.id }))
+      .map((c, i) => ({ ...c, user_id: user.id, display_order: i }))
 
     if (custom.trim()) {
-      toInsert.push({ name: custom.trim(), emoji: '📦', color: '#004E72', user_id: user.id })
+      toInsert.push({ name: custom.trim(), emoji: '📦', color: '#004E72', user_id: user.id, display_order: toInsert.length })
     }
 
     await supabase.from('categories').insert(toInsert)

@@ -1,18 +1,28 @@
-export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount, { currency = 'USD', locale = 'en-US' } = {}) {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 2,
   }).format(amount ?? 0)
 }
 
-export function formatDate(dateStr) {
+const DATE_FORMAT_OPTIONS = {
+  'MM/DD/YYYY': { month: '2-digit', day: '2-digit', year: 'numeric' },
+  'DD/MM/YYYY': { month: '2-digit', day: '2-digit', year: 'numeric' },
+  'YYYY-MM-DD': { year: 'numeric', month: '2-digit', day: '2-digit' },
+}
+
+export function formatDate(dateStr, { locale = 'en-US', dateFormat } = {}) {
   if (!dateStr) return ''
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const date = new Date(dateStr + 'T00:00:00')
+  if (dateFormat && DATE_FORMAT_OPTIONS[dateFormat]) {
+    const parts = new Intl.DateTimeFormat(locale, DATE_FORMAT_OPTIONS[dateFormat]).formatToParts(date)
+    const get = (type) => parts.find(p => p.type === type)?.value ?? ''
+    if (dateFormat === 'MM/DD/YYYY') return `${get('month')}/${get('day')}/${get('year')}`
+    if (dateFormat === 'DD/MM/YYYY') return `${get('day')}/${get('month')}/${get('year')}`
+    if (dateFormat === 'YYYY-MM-DD') return `${get('year')}-${get('month')}-${get('day')}`
+  }
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export function getGreeting() {

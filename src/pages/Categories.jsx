@@ -30,7 +30,10 @@ export default function Categories() {
     if (editing) {
       await supabase.from('categories').update(payload).eq('id', editing.id)
     } else {
-      await supabase.from('categories').insert({ ...payload, user_id: user.id })
+      const nextOrder = categories.length
+        ? Math.max(...categories.map(c => c.display_order ?? 0)) + 1
+        : 0
+      await supabase.from('categories').insert({ ...payload, user_id: user.id, display_order: nextOrder })
     }
     setSaving(false)
     setOpen(false)
@@ -42,6 +45,25 @@ export default function Categories() {
     await supabase.from('categories').delete().eq('id', id)
     reload()
   }
+
+  async function toggleHidden(cat) {
+    await supabase.from('categories').update({ is_hidden: !cat.is_hidden }).eq('id', cat.id)
+    reload()
+  }
+
+  async function move(cat, direction) {
+    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+    const index = sorted.findIndex(c => c.id === cat.id)
+    const swapWith = sorted[index + direction]
+    if (!swapWith) return
+    await Promise.all([
+      supabase.from('categories').update({ display_order: swapWith.display_order ?? 0 }).eq('id', cat.id),
+      supabase.from('categories').update({ display_order: cat.display_order ?? 0 }).eq('id', swapWith.id),
+    ])
+    reload()
+  }
+
+  const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
 
   return (
     <PageWrapper>
@@ -58,8 +80,8 @@ export default function Categories() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map(cat => (
-            <Card key={cat.id} className="flex items-center justify-between">
+          {sortedCategories.map((cat, i) => (
+            <Card key={cat.id} className={`flex items-center justify-between ${cat.is_hidden ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{cat.emoji}</span>
                 <div>
@@ -67,7 +89,12 @@ export default function Categories() {
                   <div className="w-3 h-3 rounded-full mt-1" style={{ background: cat.color }} />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => move(cat, -1)} disabled={i === 0} className="text-navy/30 hover:text-blue text-sm transition-colors disabled:opacity-20 disabled:hover:text-navy/30">▲</button>
+                <button onClick={() => move(cat, 1)} disabled={i === sortedCategories.length - 1} className="text-navy/30 hover:text-blue text-sm transition-colors disabled:opacity-20 disabled:hover:text-navy/30">▼</button>
+                <button onClick={() => toggleHidden(cat)} className="text-navy/30 hover:text-blue text-sm transition-colors" title={cat.is_hidden ? 'Show category' : 'Hide category'}>
+                  {cat.is_hidden ? '🙈' : '👁'}
+                </button>
                 <button onClick={() => openEdit(cat)} className="text-navy/30 hover:text-blue text-sm transition-colors">✏</button>
                 <button onClick={() => deleteCategory(cat.id)} className="text-navy/30 hover:text-orange text-sm transition-colors">✕</button>
               </div>
@@ -91,7 +118,7 @@ export default function Categories() {
           </div>
           <div>
             <label className="text-sm font-medium text-navy block mb-2">Color</label>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
               {PALETTE_COLORS.map(c => (
                 <button
                   key={c}
@@ -100,6 +127,13 @@ export default function Categories() {
                   style={{ background: c }}
                 />
               ))}
+              <input
+                type="color"
+                value={color}
+                onChange={e => setColor(e.target.value)}
+                className="w-8 h-8 rounded-full border border-navy/20 cursor-pointer bg-transparent p-0"
+                title="Custom color"
+              />
             </div>
           </div>
           <Button variant="primary" onClick={save} disabled={saving} className="w-full">

@@ -8,11 +8,13 @@ import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import ProgressBar from '../components/ui/ProgressBar'
-import { formatCurrency, currentMonthRange } from '../lib/utils'
+import { currentMonthRange } from '../lib/utils'
+import { useFormat } from '../context/PreferencesContext'
 
 export default function Budget() {
   const { user } = useAuth()
   const { categories, budgetGoals, transactions, reload } = useBudget()
+  const { formatCurrency } = useFormat()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [catId, setCatId] = useState('')

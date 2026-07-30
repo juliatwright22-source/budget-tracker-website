@@ -8,6 +8,7 @@ import Input from '../ui/Input'
 export default function TransactionForm({ onSuccess, defaultValues = {} }) {
   const { user } = useAuth()
   const { categories, reload } = useBudget()
+  const visibleCategories = categories.filter(c => !c.is_hidden || c.id === defaultValues.categoryId)
   const [type, setType] = useState(defaultValues.type ?? 'expense')
   const [amount, setAmount] = useState(defaultValues.amount ?? '')
   const [categoryId, setCategoryId] = useState(defaultValues.categoryId ?? '')
@@ -92,7 +93,7 @@ export default function TransactionForm({ onSuccess, defaultValues = {} }) {
               focus:outline-none focus:ring-2 focus:ring-blue/40 focus:border-blue"
           >
             <option value="">No category</option>
-            {categories.map(c => (
+            {visibleCategories.map(c => (
               <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
             ))}
           </select>

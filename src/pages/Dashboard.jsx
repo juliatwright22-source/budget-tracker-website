@@ -8,13 +8,15 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import TransactionForm from '../components/features/TransactionForm'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { formatCurrency, formatDate, getGreeting, getMonthName, lastMonthRange, lastMonthKey } from '../lib/utils'
+import { getGreeting, getMonthName, lastMonthRange, lastMonthKey } from '../lib/utils'
+import { useFormat } from '../context/PreferencesContext'
 
 const CHART_COLORS = ['#004E72', '#FF6E42', '#092634', '#7ab3c8', '#ffb59b']
 
 export default function Dashboard() {
   const { profile } = useAuth()
   const { transactions, categories, totalIncome, totalExpenses, balance, totalSaved, monthlyTx, reload } = useBudget()
+  const { formatCurrency, formatDate } = useFormat()
   const [addOpen, setAddOpen] = useState(false)
   const [banner, setBanner] = useState(null)
 
