@@ -34,7 +34,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/onboarding" element={
-        <RequireAuth><Onboarding /></RequireAuth>
+        <RequireAuth><BudgetProvider><Onboarding /></BudgetProvider></RequireAuth>
       } />
       <Route path="/dashboard" element={
         <RequireAuth><RequireOnboarding>
