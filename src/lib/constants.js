@@ -27,3 +27,29 @@ export const LOCALES = [
   { code: 'fr-FR', label: 'French (France)' },
   { code: 'ja-JP', label: 'Japanese (Japan)' },
 ]
+
+export const ACCOUNT_CLASSES = [
+  { value: 'cash',       label: 'Cash',       emoji: '💵' },
+  { value: 'investment', label: 'Investment', emoji: '📈' },
+  { value: 'debt',       label: 'Debt',       emoji: '💳' },
+]
+
+export const ACCOUNT_TYPES = [
+  { value: 'checking',        label: 'Checking',              class: 'cash' },
+  { value: 'savings',         label: 'Savings',                class: 'cash' },
+  { value: 'money_market',    label: 'Money Market',           class: 'cash' },
+  { value: 'hysa',            label: 'High-Yield Savings',     class: 'cash' },
+  { value: 'brokerage',       label: 'Brokerage',              class: 'investment' },
+  { value: 'ira_traditional', label: 'Traditional IRA',        class: 'investment' },
+  { value: 'ira_roth',        label: 'Roth IRA',                class: 'investment' },
+  { value: '401k',            label: '401(k)',                  class: 'investment' },
+  { value: '403b',            label: '403(b)',                  class: 'investment' },
+  { value: 'hsa_invested',    label: 'HSA (invested)',          class: 'investment' },
+  { value: 'hsa_cash',        label: 'HSA (cash)',              class: 'investment' },
+  { value: '529',             label: '529 Plan',                class: 'investment' },
+  { value: 'crypto',          label: 'Crypto Wallet',           class: 'investment' },
+  { value: 'credit_card',     label: 'Credit Card',             class: 'debt' },
+  { value: 'loan',            label: 'Loan',                    class: 'debt' },
+  { value: 'student_loan',    label: 'Student Loan',            class: 'debt' },
+  { value: 'custom',          label: 'Custom…',                 class: null },
+]

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider } from './context/BudgetContext'
 import { PreferencesProvider } from './context/PreferencesContext'
+import { AccountsProvider } from './context/AccountsContext'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -11,6 +12,7 @@ import Transactions from './pages/Transactions'
 import Categories from './pages/Categories'
 import Budget from './pages/Budget'
 import Savings from './pages/Savings'
+import Accounts from './pages/Accounts'
 import Settings from './pages/Settings'
 
 function RequireAuth({ children }) {
@@ -35,16 +37,16 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/onboarding" element={
-        <RequireAuth><BudgetProvider><Onboarding /></BudgetProvider></RequireAuth>
+        <RequireAuth><BudgetProvider><AccountsProvider><Onboarding /></AccountsProvider></BudgetProvider></RequireAuth>
       } />
       <Route path="/dashboard" element={
         <RequireAuth><RequireOnboarding>
-          <BudgetProvider><Dashboard /></BudgetProvider>
+          <BudgetProvider><AccountsProvider><Dashboard /></AccountsProvider></BudgetProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/transactions" element={
         <RequireAuth><RequireOnboarding>
-          <BudgetProvider><Transactions /></BudgetProvider>
+          <BudgetProvider><AccountsProvider><Transactions /></AccountsProvider></BudgetProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/categories" element={
@@ -60,6 +62,11 @@ function AppRoutes() {
       <Route path="/savings" element={
         <RequireAuth><RequireOnboarding>
           <BudgetProvider><Savings /></BudgetProvider>
+        </RequireOnboarding></RequireAuth>
+      } />
+      <Route path="/accounts" element={
+        <RequireAuth><RequireOnboarding>
+          <AccountsProvider><Accounts /></AccountsProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/settings" element={

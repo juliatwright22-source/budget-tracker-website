@@ -2,16 +2,19 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useBudget } from '../../context/BudgetContext'
+import { useAccounts } from '../../context/AccountsContext'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 
 export default function TransactionForm({ onSuccess, defaultValues = {} }) {
   const { user } = useAuth()
   const { categories, reload } = useBudget()
+  const { cashAccounts } = useAccounts() ?? { cashAccounts: [] }
   const visibleCategories = categories.filter(c => !c.is_hidden || c.id === defaultValues.categoryId)
   const [type, setType] = useState(defaultValues.type ?? 'expense')
   const [amount, setAmount] = useState(defaultValues.amount ?? '')
   const [categoryId, setCategoryId] = useState(defaultValues.categoryId ?? '')
+  const [accountId, setAccountId] = useState(defaultValues.accountId ?? '')
   const [date, setDate] = useState(defaultValues.date ?? new Date().toISOString().split('T')[0])
   const [note, setNote] = useState(defaultValues.note ?? '')
   const [receipt, setReceipt] = useState(null)
@@ -39,6 +42,7 @@ export default function TransactionForm({ onSuccess, defaultValues = {} }) {
       type,
       amount: Number(amount),
       category_id: type === 'expense' && categoryId ? categoryId : null,
+      account_id: accountId || null,
       date,
       note: note || null,
       receipt_url,
@@ -95,6 +99,23 @@ export default function TransactionForm({ onSuccess, defaultValues = {} }) {
             <option value="">No category</option>
             {visibleCategories.map(c => (
               <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {cashAccounts.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-navy">Account (optional)</label>
+          <select
+            value={accountId}
+            onChange={e => setAccountId(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-lg border border-navy/20 bg-white text-navy font-sans text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue/40 focus:border-blue"
+          >
+            <option value="">No account</option>
+            {cashAccounts.map(a => (
+              <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
         </div>

@@ -167,6 +167,7 @@ export default function Transactions() {
               type: editTx.type,
               amount: editTx.amount,
               categoryId: editTx.category_id ?? '',
+              accountId: editTx.account_id ?? '',
               date: editTx.date,
               note: editTx.note ?? '',
             }}

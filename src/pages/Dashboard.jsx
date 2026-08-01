@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
+import { useAccounts } from '../context/AccountsContext'
 import PageWrapper from '../components/layout/PageWrapper'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
@@ -16,6 +17,7 @@ const CHART_COLORS = ['#004E72', '#FF6E42', '#092634', '#7ab3c8', '#ffb59b']
 export default function Dashboard() {
   const { profile } = useAuth()
   const { transactions, categories, totalIncome, totalExpenses, balance, totalSaved, monthlyTx, reload } = useBudget()
+  const { netWorth, accounts } = useAccounts()
   const { formatCurrency, formatDate } = useFormat()
   const [addOpen, setAddOpen] = useState(false)
   const [banner, setBanner] = useState(null)
@@ -85,7 +87,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <Card>
           <p className="text-xs font-sans text-navy/50 mb-1">Income this month</p>
           <p className="font-sans font-semibold text-xl text-blue">{formatCurrency(totalIncome)}</p>
@@ -97,6 +99,12 @@ export default function Dashboard() {
         <Card>
           <p className="text-xs font-sans text-navy/50 mb-1">Remaining</p>
           <p className="font-sans font-semibold text-xl text-navy">{formatCurrency(balance)}</p>
+        </Card>
+        <Card>
+          <p className="text-xs font-sans text-navy/50 mb-1">Net worth</p>
+          {accounts.length > 0
+            ? <p className="font-sans font-semibold text-xl text-navy">{formatCurrency(netWorth)}</p>
+            : <p className="text-xs font-sans text-navy/40 mt-1">Add an account to track this</p>}
         </Card>
         <Card>
           <p className="text-xs font-sans text-navy/50 mb-1">Total saved</p>
