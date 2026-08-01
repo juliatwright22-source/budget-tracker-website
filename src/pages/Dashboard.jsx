@@ -8,6 +8,7 @@ import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import TransactionForm from '../components/features/TransactionForm'
+import AlertBanner from '../components/features/AlertBanner'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { getGreeting, getMonthName, lastMonthRange, lastMonthKey } from '../lib/utils'
 import { useFormat } from '../context/PreferencesContext'
@@ -16,11 +17,16 @@ const CHART_COLORS = ['#004E72', '#FF6E42', '#092634', '#7ab3c8', '#ffb59b']
 
 export default function Dashboard() {
   const { profile } = useAuth()
-  const { transactions, categories, totalIncome, totalExpenses, balance, totalSaved, monthlyTx, reload } = useBudget()
+  const {
+    transactions, categories, totalIncome, totalExpenses, balance, totalSaved, monthlyTx, reload,
+    lastMonthCashFlowIntent, saveCashFlowIntent,
+  } = useBudget()
   const { netWorth, accounts } = useAccounts()
   const { formatCurrency, formatDate } = useFormat()
   const [addOpen, setAddOpen] = useState(false)
   const [banner, setBanner] = useState(null)
+  const [actualDescription, setActualDescription] = useState('')
+  const [actualAmount, setActualAmount] = useState('')
 
   // Monthly summary banner
   useEffect(() => {
@@ -52,6 +58,15 @@ export default function Dashboard() {
     setBanner(null)
   }
 
+  async function resolveIntent() {
+    await saveCashFlowIntent(lastMonthKey(), {
+      actual_description: actualDescription || null,
+      actual_amount: actualAmount !== '' ? Number(actualAmount) : null,
+      status: 'resolved',
+    })
+    setActualDescription(''); setActualAmount('')
+  }
+
   // Donut chart data
   const catMap = Object.fromEntries(categories.map(c => [c.id, c]))
   const catSpend = {}
@@ -65,6 +80,8 @@ export default function Dashboard() {
 
   return (
     <PageWrapper>
+      <AlertBanner />
+
       {/* Monthly summary banner */}
       {banner && (
         <div className="mb-6 bg-navy rounded-xl p-5 text-white relative">
@@ -77,6 +94,33 @@ export default function Dashboard() {
             {banner.biggestCat && <div><p className="text-white/50 text-xs">Biggest category</p><p className="font-medium">{banner.biggestCat.emoji} {banner.biggestCat.name}</p></div>}
           </div>
           <p className="text-white/60 text-xs mt-3 font-sans">You stayed under budget — great work. Keep it up this month.</p>
+
+          {lastMonthCashFlowIntent?.status === 'declared' && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-sm font-sans text-white/90 mb-2">
+                You planned: "{lastMonthCashFlowIntent.intent_description}"
+                {lastMonthCashFlowIntent.planned_amount != null && ` (${formatCurrency(lastMonthCashFlowIntent.planned_amount)})`} — what did you actually do?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="What actually happened?"
+                  value={actualDescription}
+                  onChange={e => setActualDescription(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/10 text-white placeholder-white/40 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-white/30"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Amount"
+                  value={actualAmount}
+                  onChange={e => setActualAmount(e.target.value)}
+                  className="w-full sm:w-28 px-3 py-2 rounded-lg bg-white/10 text-white placeholder-white/40 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-white/30"
+                />
+                <Button variant="cta" size="sm" onClick={resolveIntent}>Save</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

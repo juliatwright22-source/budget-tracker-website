@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
-import { currentMonthRange } from '../lib/utils'
+import { currentMonthRange, currentMonthKey, lastMonthKey } from '../lib/utils'
 import { occurrencesDue } from '../lib/recurring'
 
 const BudgetContext = createContext(null)
@@ -61,26 +61,51 @@ export function BudgetProvider({ children }) {
   const [budgetGoals, setBudgetGoals] = useState([])
   const [savingsGoals, setSavingsGoals] = useState([])
   const [recurringRules, setRecurringRules] = useState([])
+  const [dismissedAlerts, setDismissedAlerts] = useState([])
+  const [cashFlowIntents, setCashFlowIntents] = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return }
     setLoading(true)
     await generateDueRecurringTransactions(user.id)
-    const [tx, cats, budgets, savings, recurring] = await Promise.all([
+    const [tx, cats, budgets, savings, recurring, dismissed, cashFlow] = await Promise.all([
       supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
       supabase.from('categories').select('*').eq('user_id', user.id).order('display_order').order('created_at'),
       supabase.from('budget_goals').select('*').eq('user_id', user.id),
       supabase.from('savings_goals').select('*').eq('user_id', user.id).order('created_at'),
       supabase.from('recurring_rules').select('*').eq('user_id', user.id).order('created_at'),
+      supabase.from('dismissed_alerts').select('*').eq('user_id', user.id),
+      supabase.from('cash_flow_intents').select('*').eq('user_id', user.id)
+        .in('month_key', [currentMonthKey(), lastMonthKey()]),
     ])
     setTransactions(tx.data ?? [])
     setCategories(cats.data ?? [])
     setBudgetGoals(budgets.data ?? [])
     setSavingsGoals(savings.data ?? [])
     setRecurringRules(recurring.data ?? [])
+    setDismissedAlerts(dismissed.data ?? [])
+    setCashFlowIntents(cashFlow.data ?? [])
     setLoading(false)
   }, [user])
+
+  async function dismissAlert(alertKeyValue) {
+    if (!user) return
+    await supabase.from('dismissed_alerts').upsert(
+      { user_id: user.id, alert_key: alertKeyValue },
+      { onConflict: 'user_id,alert_key' }
+    )
+    await load()
+  }
+
+  async function saveCashFlowIntent(monthKey, fields) {
+    if (!user) return
+    await supabase.from('cash_flow_intents').upsert(
+      { user_id: user.id, month_key: monthKey, ...fields },
+      { onConflict: 'user_id,month_key' }
+    )
+    await load()
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -92,11 +117,15 @@ export function BudgetProvider({ children }) {
   const balance = totalIncome - totalExpenses
   const totalSaved = savingsGoals.reduce((s, g) => s + Number(g.current_amount), 0)
 
+  const currentCashFlowIntent = cashFlowIntents.find(c => c.month_key === currentMonthKey()) ?? null
+  const lastMonthCashFlowIntent = cashFlowIntents.find(c => c.month_key === lastMonthKey()) ?? null
+
   return (
     <BudgetContext.Provider value={{
       transactions, categories, budgetGoals, savingsGoals, recurringRules,
+      dismissedAlerts, cashFlowIntents, currentCashFlowIntent, lastMonthCashFlowIntent,
       totalIncome, totalExpenses, balance, totalSaved,
-      monthlyTx, loading, reload: load,
+      monthlyTx, loading, reload: load, dismissAlert, saveCashFlowIntent,
     }}>
       {children}
     </BudgetContext.Provider>

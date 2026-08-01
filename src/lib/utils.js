@@ -48,6 +48,11 @@ export function lastMonthKey() {
   return `${d.getFullYear()}-${d.getMonth() + 1}`
 }
 
+export function currentMonthKey() {
+  const d = new Date()
+  return `${d.getFullYear()}-${d.getMonth() + 1}`
+}
+
 export function currentMonthRange() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
