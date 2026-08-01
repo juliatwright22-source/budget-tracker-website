@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import AccountForm from '../components/features/AccountForm'
 import HoldingsPanel from '../components/features/HoldingsPanel'
+import ProjectionsPanel from '../components/features/ProjectionsPanel'
 import { ACCOUNT_CLASSES, ACCOUNT_TYPES } from '../lib/constants'
 import { useFormat } from '../context/PreferencesContext'
 
@@ -21,6 +22,7 @@ export default function Accounts() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [holdingsAccount, setHoldingsAccount] = useState(null)
+  const [projectionsAccount, setProjectionsAccount] = useState(null)
 
   function openNew() { setEditing(null); setOpen(true) }
   function openEdit(a) { setEditing(a); setOpen(true) }
@@ -93,11 +95,18 @@ export default function Accounts() {
                         <p className={`font-sans font-semibold text-lg mt-2 ${cls.value === 'debt' ? 'text-orange' : 'text-navy'}`}>
                           {formatCurrency(a.current_balance)}
                         </p>
-                        {cls.value === 'investment' && (
-                          <button onClick={() => setHoldingsAccount(a)} className="text-xs font-sans text-blue hover:underline mt-1">
-                            📊 Holdings
-                          </button>
-                        )}
+                        <div className="flex gap-3 mt-1">
+                          {cls.value === 'investment' && (
+                            <button onClick={() => setHoldingsAccount(a)} className="text-xs font-sans text-blue hover:underline">
+                              📊 Holdings
+                            </button>
+                          )}
+                          {cls.value !== 'debt' && (
+                            <button onClick={() => setProjectionsAccount(a)} className="text-xs font-sans text-blue hover:underline">
+                              📈 Projections
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => openEdit(a)} className="text-navy/30 hover:text-blue text-sm transition-colors">✏</button>
@@ -137,6 +146,10 @@ export default function Accounts() {
 
       <Modal open={!!holdingsAccount} onClose={() => setHoldingsAccount(null)} title={holdingsAccount?.name ?? ''}>
         {holdingsAccount && <HoldingsPanel account={holdingsAccount} />}
+      </Modal>
+
+      <Modal open={!!projectionsAccount} onClose={() => setProjectionsAccount(null)} title={projectionsAccount ? `Projections — ${projectionsAccount.name}` : ''}>
+        {projectionsAccount && <ProjectionsPanel account={projectionsAccount} />}
       </Modal>
     </PageWrapper>
   )
