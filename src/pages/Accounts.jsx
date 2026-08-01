@@ -6,6 +6,7 @@ import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import AccountForm from '../components/features/AccountForm'
+import HoldingsPanel from '../components/features/HoldingsPanel'
 import { ACCOUNT_CLASSES, ACCOUNT_TYPES } from '../lib/constants'
 import { useFormat } from '../context/PreferencesContext'
 
@@ -19,6 +20,7 @@ export default function Accounts() {
   const { formatCurrency } = useFormat()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [holdingsAccount, setHoldingsAccount] = useState(null)
 
   function openNew() { setEditing(null); setOpen(true) }
   function openEdit(a) { setEditing(a); setOpen(true) }
@@ -91,6 +93,11 @@ export default function Accounts() {
                         <p className={`font-sans font-semibold text-lg mt-2 ${cls.value === 'debt' ? 'text-orange' : 'text-navy'}`}>
                           {formatCurrency(a.current_balance)}
                         </p>
+                        {cls.value === 'investment' && (
+                          <button onClick={() => setHoldingsAccount(a)} className="text-xs font-sans text-blue hover:underline mt-1">
+                            📊 Holdings
+                          </button>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => openEdit(a)} className="text-navy/30 hover:text-blue text-sm transition-colors">✏</button>
@@ -126,6 +133,10 @@ export default function Accounts() {
           defaultValues={editing ?? {}}
           onSuccess={() => setOpen(false)}
         />
+      </Modal>
+
+      <Modal open={!!holdingsAccount} onClose={() => setHoldingsAccount(null)} title={holdingsAccount?.name ?? ''}>
+        {holdingsAccount && <HoldingsPanel account={holdingsAccount} />}
       </Modal>
     </PageWrapper>
   )

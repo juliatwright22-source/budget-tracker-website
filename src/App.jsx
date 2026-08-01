@@ -4,6 +4,7 @@ import { BudgetProvider } from './context/BudgetContext'
 import { PreferencesProvider } from './context/PreferencesContext'
 import { AccountsProvider } from './context/AccountsContext'
 import { GoalsProvider } from './context/GoalsContext'
+import { InvestmentsProvider } from './context/InvestmentsContext'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -67,7 +68,7 @@ function AppRoutes() {
       } />
       <Route path="/accounts" element={
         <RequireAuth><RequireOnboarding>
-          <AccountsProvider><Accounts /></AccountsProvider>
+          <AccountsProvider><InvestmentsProvider><Accounts /></InvestmentsProvider></AccountsProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/settings" element={
