@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useBudget } from '../context/BudgetContext'
 import { useAccounts } from '../context/AccountsContext'
+import { useGoals } from '../context/GoalsContext'
 import PageWrapper from '../components/layout/PageWrapper'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
@@ -12,16 +13,20 @@ import AlertBanner from '../components/features/AlertBanner'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { getGreeting, getMonthName, lastMonthRange, lastMonthKey } from '../lib/utils'
 import { useFormat } from '../context/PreferencesContext'
+import { goalProgress } from '../lib/goals'
 
 const CHART_COLORS = ['#004E72', '#FF6E42', '#092634', '#7ab3c8', '#ffb59b']
 
 export default function Dashboard() {
   const { profile } = useAuth()
   const {
-    transactions, categories, totalIncome, totalExpenses, balance, totalSaved, monthlyTx, reload,
+    transactions, categories, totalIncome, totalExpenses, balance, monthlyTx, reload,
     lastMonthCashFlowIntent, saveCashFlowIntent,
   } = useBudget()
   const { netWorth, accounts } = useAccounts()
+  const { goals } = useGoals()
+  const accountsById = Object.fromEntries(accounts.map(a => [a.id, a]))
+  const totalSaved = goals.reduce((s, g) => s + goalProgress(g, accountsById), 0)
   const { formatCurrency, formatDate } = useFormat()
   const [addOpen, setAddOpen] = useState(false)
   const [banner, setBanner] = useState(null)

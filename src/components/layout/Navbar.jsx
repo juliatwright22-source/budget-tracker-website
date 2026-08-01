@@ -6,7 +6,7 @@ const navItems = [
   { label: 'Transactions', path: '/transactions', icon: '↕' },
   { label: 'Categories',   path: '/categories',   icon: '⊟' },
   { label: 'Budget',       path: '/budget',       icon: '◎' },
-  { label: 'Savings',      path: '/savings',      icon: '★' },
+  { label: 'Goals',        path: '/goals',        icon: '★' },
   { label: 'Accounts',     path: '/accounts',     icon: '🏦' },
   { label: 'Settings',     path: '/settings',     icon: '⚙' },
 ]

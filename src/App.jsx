@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { BudgetProvider } from './context/BudgetContext'
 import { PreferencesProvider } from './context/PreferencesContext'
 import { AccountsProvider } from './context/AccountsContext'
+import { GoalsProvider } from './context/GoalsContext'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -11,7 +12,7 @@ import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Categories from './pages/Categories'
 import Budget from './pages/Budget'
-import Savings from './pages/Savings'
+import Goals from './pages/Goals'
 import Accounts from './pages/Accounts'
 import Settings from './pages/Settings'
 
@@ -41,7 +42,7 @@ function AppRoutes() {
       } />
       <Route path="/dashboard" element={
         <RequireAuth><RequireOnboarding>
-          <BudgetProvider><AccountsProvider><Dashboard /></AccountsProvider></BudgetProvider>
+          <BudgetProvider><AccountsProvider><GoalsProvider><Dashboard /></GoalsProvider></AccountsProvider></BudgetProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/transactions" element={
@@ -59,9 +60,9 @@ function AppRoutes() {
           <BudgetProvider><Budget /></BudgetProvider>
         </RequireOnboarding></RequireAuth>
       } />
-      <Route path="/savings" element={
+      <Route path="/goals" element={
         <RequireAuth><RequireOnboarding>
-          <BudgetProvider><Savings /></BudgetProvider>
+          <AccountsProvider><GoalsProvider><Goals /></GoalsProvider></AccountsProvider>
         </RequireOnboarding></RequireAuth>
       } />
       <Route path="/accounts" element={

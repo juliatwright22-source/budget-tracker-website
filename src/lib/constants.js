@@ -53,3 +53,13 @@ export const ACCOUNT_TYPES = [
   { value: 'student_loan',    label: 'Student Loan',            class: 'debt' },
   { value: 'custom',          label: 'Custom…',                 class: null },
 ]
+
+export const GOAL_TEMPLATES = [
+  { key: 'emergency_fund',    label: 'Emergency Fund',     emoji: '🛟', target_basis: 'n_months_expenses', target_months_expenses: 3 },
+  { key: 'vacation',          label: 'Vacation Fund',      emoji: '✈️', target_basis: 'fixed_amount' },
+  { key: 'car_down_payment',  label: 'Car Down Payment',   emoji: '🚗', target_basis: 'fixed_amount' },
+  { key: 'home_down_payment', label: 'Home Down Payment',  emoji: '🏡', target_basis: 'fixed_amount' },
+  { key: 'wedding',           label: 'Wedding',            emoji: '💍', target_basis: 'fixed_amount' },
+  { key: 'debt_payoff',       label: 'Debt Payoff',        emoji: '📉', target_basis: 'fixed_amount' },
+  { key: 'custom',            label: 'Custom',             emoji: '🎯', target_basis: 'fixed_amount' },
+]

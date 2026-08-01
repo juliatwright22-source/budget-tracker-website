@@ -59,7 +59,6 @@ export function BudgetProvider({ children }) {
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [budgetGoals, setBudgetGoals] = useState([])
-  const [savingsGoals, setSavingsGoals] = useState([])
   const [recurringRules, setRecurringRules] = useState([])
   const [dismissedAlerts, setDismissedAlerts] = useState([])
   const [cashFlowIntents, setCashFlowIntents] = useState([])
@@ -69,11 +68,10 @@ export function BudgetProvider({ children }) {
     if (!user) { setLoading(false); return }
     setLoading(true)
     await generateDueRecurringTransactions(user.id)
-    const [tx, cats, budgets, savings, recurring, dismissed, cashFlow] = await Promise.all([
+    const [tx, cats, budgets, recurring, dismissed, cashFlow] = await Promise.all([
       supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
       supabase.from('categories').select('*').eq('user_id', user.id).order('display_order').order('created_at'),
       supabase.from('budget_goals').select('*').eq('user_id', user.id),
-      supabase.from('savings_goals').select('*').eq('user_id', user.id).order('created_at'),
       supabase.from('recurring_rules').select('*').eq('user_id', user.id).order('created_at'),
       supabase.from('dismissed_alerts').select('*').eq('user_id', user.id),
       supabase.from('cash_flow_intents').select('*').eq('user_id', user.id)
@@ -82,7 +80,6 @@ export function BudgetProvider({ children }) {
     setTransactions(tx.data ?? [])
     setCategories(cats.data ?? [])
     setBudgetGoals(budgets.data ?? [])
-    setSavingsGoals(savings.data ?? [])
     setRecurringRules(recurring.data ?? [])
     setDismissedAlerts(dismissed.data ?? [])
     setCashFlowIntents(cashFlow.data ?? [])
@@ -115,16 +112,15 @@ export function BudgetProvider({ children }) {
   const totalIncome = monthlyTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
   const totalExpenses = monthlyTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
   const balance = totalIncome - totalExpenses
-  const totalSaved = savingsGoals.reduce((s, g) => s + Number(g.current_amount), 0)
 
   const currentCashFlowIntent = cashFlowIntents.find(c => c.month_key === currentMonthKey()) ?? null
   const lastMonthCashFlowIntent = cashFlowIntents.find(c => c.month_key === lastMonthKey()) ?? null
 
   return (
     <BudgetContext.Provider value={{
-      transactions, categories, budgetGoals, savingsGoals, recurringRules,
+      transactions, categories, budgetGoals, recurringRules,
       dismissedAlerts, cashFlowIntents, currentCashFlowIntent, lastMonthCashFlowIntent,
-      totalIncome, totalExpenses, balance, totalSaved,
+      totalIncome, totalExpenses, balance,
       monthlyTx, loading, reload: load, dismissAlert, saveCashFlowIntent,
     }}>
       {children}
