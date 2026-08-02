@@ -7,18 +7,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [mfaPending, setMfaPending] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) { fetchProfile(session.user.id); checkMfaStatus() }
       else setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      if (session?.user) { fetchProfile(session.user.id); checkMfaStatus() }
+      else { setProfile(null); setMfaPending(false); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
@@ -34,12 +35,19 @@ export function AuthProvider({ children }) {
     if (user) await fetchProfile(user.id)
   }
 
+  // A user with a verified TOTP factor is stuck at aal1 until they complete the
+  // challenge; nextLevel only reports aal2 once a verified factor exists.
+  async function checkMfaStatus() {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    setMfaPending(!!data && data.nextLevel === 'aal2' && data.currentLevel === 'aal1')
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, mfaPending, signOut, refreshProfile, refreshMfaStatus: checkMfaStatus }}>
       {children}
     </AuthContext.Provider>
   )

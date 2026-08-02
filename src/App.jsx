@@ -16,12 +16,14 @@ import Budget from './pages/Budget'
 import Goals from './pages/Goals'
 import Accounts from './pages/Accounts'
 import Settings from './pages/Settings'
+import MfaChallenge from './components/features/MfaChallenge'
 
 function RequireAuth({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, mfaPending } = useAuth()
   const location = useLocation()
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><span className="font-serif text-2xl text-navy/40">Loading…</span></div>
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />
+  if (mfaPending) return <MfaChallenge />
   return children
 }
 

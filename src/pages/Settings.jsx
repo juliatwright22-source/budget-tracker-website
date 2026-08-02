@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { usePreferences } from '../context/PreferencesContext'
@@ -17,6 +17,52 @@ export default function Settings() {
   const [dateFormatChoice, setDateFormatChoice] = useState(date_format)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  const [mfaFactor, setMfaFactor] = useState(null)
+  const [mfaLoaded, setMfaLoaded] = useState(false)
+  const [enrollData, setEnrollData] = useState(null)
+  const [verifyCode, setVerifyCode] = useState('')
+  const [mfaError, setMfaError] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
+
+  useEffect(() => { loadMfaFactor() }, [])
+
+  async function loadMfaFactor() {
+    const { data } = await supabase.auth.mfa.listFactors()
+    setMfaFactor(data?.totp?.find(f => f.status === 'verified') ?? null)
+    setMfaLoaded(true)
+  }
+
+  async function startEnroll() {
+    setMfaError(''); setMfaBusy(true)
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    setMfaBusy(false)
+    if (error) { setMfaError('Could not start setup. Try again.'); return }
+    setEnrollData(data)
+  }
+
+  async function confirmEnroll() {
+    if (verifyCode.length !== 6) return
+    setMfaError(''); setMfaBusy(true)
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: enrollData.id, code: verifyCode })
+    setMfaBusy(false)
+    if (error) { setMfaError("That code didn't work — check your app and try again."); return }
+    setEnrollData(null); setVerifyCode('')
+    await loadMfaFactor()
+  }
+
+  async function cancelEnroll() {
+    if (enrollData) await supabase.auth.mfa.unenroll({ factorId: enrollData.id })
+    setEnrollData(null); setVerifyCode(''); setMfaError('')
+  }
+
+  async function turnOffMfa() {
+    if (!confirm('Turn off two-factor authentication?')) return
+    setMfaBusy(true)
+    await supabase.auth.mfa.unenroll({ factorId: mfaFactor.id })
+    setMfaBusy(false)
+    await loadMfaFactor()
+  }
 
   async function save() {
     if (!name.trim()) return
@@ -90,6 +136,56 @@ export default function Settings() {
               {saved ? 'Saved!' : saving ? 'Saving…' : 'Save changes'}
             </Button>
           </div>
+        </Card>
+
+        <Card>
+          <h2 className="font-serif text-xl text-navy mb-1">Two-factor authentication</h2>
+          {!mfaLoaded ? (
+            <p className="text-sm font-sans text-navy/40 mt-3">Loading…</p>
+          ) : enrollData ? (
+            <div className="flex flex-col gap-4 mt-3">
+              <p className="text-sm font-sans text-navy/60">
+                Scan this with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code it shows.
+              </p>
+              <img src={enrollData.totp.qr_code} alt="Scan with your authenticator app" className="w-40 h-40 mx-auto" />
+              <p className="text-xs font-sans text-navy/40 text-center break-all">
+                Can't scan? Enter this code manually: {enrollData.totp.secret}
+              </p>
+              <Input
+                label="6-digit code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={verifyCode}
+                onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+              />
+              {mfaError && <p className="text-sm text-orange">{mfaError}</p>}
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={cancelEnroll} className="flex-1">Cancel</Button>
+                <Button variant="primary" onClick={confirmEnroll} disabled={mfaBusy || verifyCode.length !== 6} className="flex-1">
+                  {mfaBusy ? 'Verifying…' : 'Confirm'}
+                </Button>
+              </div>
+            </div>
+          ) : mfaFactor ? (
+            <div className="mt-3">
+              <p className="text-sm font-sans text-blue mb-4">Two-factor authentication is on.</p>
+              <Button variant="ghost" onClick={turnOffMfa} disabled={mfaBusy} className="w-full">
+                {mfaBusy ? 'Turning off…' : 'Turn off'}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-3">
+              <p className="text-sm font-sans text-navy/50 mb-4">
+                Add an extra layer of security — you'll need a code from an authenticator app to sign in.
+              </p>
+              {mfaError && <p className="text-sm text-orange mb-3">{mfaError}</p>}
+              <Button variant="primary" onClick={startEnroll} disabled={mfaBusy} className="w-full">
+                {mfaBusy ? 'Starting…' : 'Enable 2FA'}
+              </Button>
+            </div>
+          )}
         </Card>
 
         <Card>
