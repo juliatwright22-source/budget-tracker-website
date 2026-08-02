@@ -54,6 +54,45 @@ export const ACCOUNT_TYPES = [
   { value: 'custom',          label: 'Custom…',                 class: null },
 ]
 
+export const ONBOARDING_PERSONAS = [
+  {
+    key: 'student', label: 'Student', emoji: '🎓',
+    description: 'Tight budget, just starting out',
+    suggestedCategories: ['Groceries', 'Dining Out', 'Entertainment', 'Utilities', 'Gas'],
+    suggestedGoalTemplate: 'emergency_fund',
+  },
+  {
+    key: 'young_professional', label: 'Young Professional', emoji: '💼',
+    description: 'Building savings, maybe paying down debt',
+    suggestedCategories: ['Rent/Mortgage', 'Groceries', 'Dining Out', 'Entertainment', 'Utilities', 'Gas', 'Auto Insurance'],
+    suggestedGoalTemplate: 'emergency_fund',
+  },
+  {
+    key: 'family', label: 'Family with Kids', emoji: '👨‍👩‍👧',
+    description: 'Managing a household budget',
+    suggestedCategories: ['Rent/Mortgage', 'Groceries', 'Utilities', 'Health/Dental/Vision', 'Auto Insurance', "Renter's/Home Insurance", 'Gas'],
+    suggestedGoalTemplate: 'home_down_payment',
+  },
+  {
+    key: 'near_retirement', label: 'Near Retirement', emoji: '🌅',
+    description: 'Focused on preserving and growing savings',
+    suggestedCategories: ['Rent/Mortgage', 'Health/Dental/Vision', 'Groceries', 'Utilities', "Renter's/Home Insurance", 'Gas'],
+    suggestedGoalTemplate: 'emergency_fund',
+  },
+  {
+    key: 'self_employed', label: 'Self-Employed / Variable Income', emoji: '📊',
+    description: 'Income that changes month to month',
+    suggestedCategories: ['Rent/Mortgage', 'Groceries', 'Utilities', 'Auto Insurance', 'Health/Dental/Vision', 'Gas', 'Dining Out'],
+    suggestedGoalTemplate: 'emergency_fund',
+  },
+  {
+    key: 'custom', label: "I'll set it up myself", emoji: '🧭',
+    description: 'Skip suggestions, start from scratch',
+    suggestedCategories: [],
+    suggestedGoalTemplate: null,
+  },
+]
+
 export const GOAL_TEMPLATES = [
   { key: 'emergency_fund',    label: 'Emergency Fund',     emoji: '🛟', target_basis: 'n_months_expenses', target_months_expenses: 3 },
   { key: 'vacation',          label: 'Vacation Fund',      emoji: '✈️', target_basis: 'fixed_amount' },
