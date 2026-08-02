@@ -22,6 +22,16 @@ async function applyContribution(goalId, amount, depth = 0) {
     accountClass = account?.account_class ?? null
   }
 
+  if (accountClass === 'debt') {
+    // Paying down debt: no cap/overflow cascade (the target itself is the natural
+    // ceiling), and a payment can't exceed the remaining balance.
+    const applied = Math.min(amount, current)
+    if (applied > 0) {
+      await supabase.from('accounts').update({ current_balance: current - applied }).eq('id', goal.linked_account_id)
+    }
+    return amount - applied
+  }
+
   const cap = goal.cap_amount != null ? Number(goal.cap_amount) : null
   const room = cap != null ? Math.max(cap - current, 0) : amount
   const applied = Math.min(amount, room)

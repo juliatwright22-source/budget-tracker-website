@@ -9,7 +9,7 @@ import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import ProgressBar from '../components/ui/ProgressBar'
 import GoalForm from '../components/features/GoalForm'
-import { effectiveTarget, goalProgress } from '../lib/goals'
+import { effectiveTarget, goalProgress, isDebtLinkedGoal } from '../lib/goals'
 import { useFormat } from '../context/PreferencesContext'
 
 export default function Goals() {
@@ -50,7 +50,11 @@ export default function Goals() {
     if (!fundsAmount || isNaN(Number(fundsAmount))) return
     const leftover = await addFunds(fundsGoal.id, Number(fundsAmount))
     if (leftover > 0) {
-      setFundsMessage(`${formatCurrency(leftover)} couldn't be allocated — this goal (and its overflow chain) is at capacity.`)
+      setFundsMessage(
+        isDebtLinkedGoal(fundsGoal, accountsById)
+          ? `${formatCurrency(leftover)} more than the remaining balance — only the balance owed was applied.`
+          : `${formatCurrency(leftover)} couldn't be allocated — this goal (and its overflow chain) is at capacity.`
+      )
     } else {
       setFundsGoal(null); setFundsAmount(''); setFundsMessage('')
     }
@@ -78,6 +82,7 @@ export default function Goals() {
             const remaining = target - current
             const overflowGoal = g.overflow_goal_id ? goalsById[g.overflow_goal_id] : null
             const linkedAccount = g.linked_account_id ? accountsById[g.linked_account_id] : null
+            const isDebt = isDebtLinkedGoal(g, accountsById)
 
             return (
               <Card key={g.id}>
@@ -102,11 +107,11 @@ export default function Goals() {
 
                 <div className="flex justify-between text-sm font-sans mb-3">
                   <div>
-                    <p className="text-navy/40 text-xs">Saved</p>
+                    <p className="text-navy/40 text-xs">{isDebt ? 'Paid off' : 'Saved'}</p>
                     <p className="font-semibold text-blue">{formatCurrency(current)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-navy/40 text-xs">Remaining</p>
+                    <p className="text-navy/40 text-xs">{isDebt ? 'Owed' : 'Remaining'}</p>
                     <p className="font-semibold text-orange">{formatCurrency(Math.max(remaining, 0))}</p>
                   </div>
                   <div className="text-right">
@@ -122,7 +127,7 @@ export default function Goals() {
                 )}
 
                 <Button variant="primary" size="sm" onClick={() => { setFundsGoal(g); setFundsAmount(''); setFundsMessage('') }} className="w-full">
-                  Add funds
+                  {isDebt ? 'Log a payment' : 'Add funds'}
                 </Button>
               </Card>
             )
@@ -134,11 +139,20 @@ export default function Goals() {
         <GoalForm defaultValues={editing ?? {}} onSuccess={() => setOpen(false)} />
       </Modal>
 
-      <Modal open={!!fundsGoal} onClose={() => setFundsGoal(null)} title={`Add funds — ${fundsGoal?.name}`}>
+      <Modal
+        open={!!fundsGoal}
+        onClose={() => setFundsGoal(null)}
+        title={`${fundsGoal && isDebtLinkedGoal(fundsGoal, accountsById) ? 'Log a payment' : 'Add funds'} — ${fundsGoal?.name}`}
+      >
         <div className="flex flex-col gap-4">
-          <Input label="Amount to add (USD)" type="number" min="0.01" step="0.01" value={fundsAmount} onChange={e => setFundsAmount(e.target.value)} placeholder="0.00" />
+          <Input
+            label={fundsGoal && isDebtLinkedGoal(fundsGoal, accountsById) ? 'Payment amount (USD)' : 'Amount to add (USD)'}
+            type="number" min="0.01" step="0.01" value={fundsAmount} onChange={e => setFundsAmount(e.target.value)} placeholder="0.00"
+          />
           {fundsMessage && <p className="text-sm text-orange">{fundsMessage}</p>}
-          <Button variant="primary" onClick={submitFunds} className="w-full">Add funds</Button>
+          <Button variant="primary" onClick={submitFunds} className="w-full">
+            {fundsGoal && isDebtLinkedGoal(fundsGoal, accountsById) ? 'Log payment' : 'Add funds'}
+          </Button>
         </div>
       </Modal>
     </PageWrapper>

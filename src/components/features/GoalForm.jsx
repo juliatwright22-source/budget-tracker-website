@@ -11,7 +11,7 @@ export default function GoalForm({ onSuccess, defaultValues = {} }) {
   const { user } = useAuth()
   const { goals, reload } = useGoals()
   const { activeAccounts } = useAccounts()
-  const linkableAccounts = activeAccounts.filter(a => a.account_class === 'cash' || a.account_class === 'investment')
+  const linkableAccounts = activeAccounts
 
   const [template, setTemplate] = useState(defaultValues.template ?? 'custom')
   const [name, setName] = useState(defaultValues.name ?? '')
@@ -29,6 +29,16 @@ export default function GoalForm({ onSuccess, defaultValues = {} }) {
   const [error, setError] = useState('')
 
   const otherGoals = goals.filter(g => g.id !== defaultValues.id)
+  const selectedAccount = activeAccounts.find(a => a.id === linkedAccountId)
+  const isDebtLinked = selectedAccount?.account_class === 'debt'
+
+  function handleLinkAccount(accountId) {
+    setLinkedAccountId(accountId)
+    const account = activeAccounts.find(a => a.id === accountId)
+    if (account?.account_class === 'debt' && targetBasis === 'fixed_amount' && !targetAmount) {
+      setTargetAmount(String(account.current_balance))
+    }
+  }
 
   function applyTemplate(key) {
     setTemplate(key)
@@ -55,8 +65,8 @@ export default function GoalForm({ onSuccess, defaultValues = {} }) {
       target_months_expenses: targetBasis === 'n_months_expenses' ? Number(targetMonthsExpenses) || null : null,
       target_date: targetDate || null,
       linked_account_id: linkedAccountId || null,
-      cap_amount: capAmount !== '' ? Number(capAmount) : null,
-      overflow_goal_id: capAmount !== '' && overflowGoalId ? overflowGoalId : null,
+      cap_amount: !isDebtLinked && capAmount !== '' ? Number(capAmount) : null,
+      overflow_goal_id: !isDebtLinked && capAmount !== '' && overflowGoalId ? overflowGoalId : null,
     }
 
     const { error: dbErr } = defaultValues.id
@@ -133,35 +143,41 @@ export default function GoalForm({ onSuccess, defaultValues = {} }) {
         <label className="text-sm font-medium text-navy">Linked account (optional)</label>
         <select
           value={linkedAccountId}
-          onChange={e => setLinkedAccountId(e.target.value)}
+          onChange={e => handleLinkAccount(e.target.value)}
           className="w-full px-4 py-2.5 rounded-lg border border-navy/20 bg-white text-navy font-sans text-sm
             focus:outline-none focus:ring-2 focus:ring-blue/40"
         >
           <option value="">Not linked — track manually</option>
-          {linkableAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          {linkableAccounts.map(a => <option key={a.id} value={a.id}>{a.name}{a.account_class === 'debt' ? ' (debt)' : ''}</option>)}
         </select>
         {linkedAccountId && (
           <p className="text-xs text-navy/40 font-sans mt-1">
-            Progress will follow this account's balance, and adding funds here deposits into it.
+            {isDebtLinked
+              ? "Progress will track how much you've paid off, and logging a payment here reduces the balance."
+              : "Progress will follow this account's balance, and adding funds here deposits into it."}
           </p>
         )}
       </div>
 
-      <Input label="Cap amount (optional)" type="number" min="0" step="0.01" value={capAmount} onChange={e => setCapAmount(e.target.value)} placeholder="e.g. 10000" />
+      {!isDebtLinked && (
+        <>
+          <Input label="Cap amount (optional)" type="number" min="0" step="0.01" value={capAmount} onChange={e => setCapAmount(e.target.value)} placeholder="e.g. 10000" />
 
-      {capAmount !== '' && (
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-navy">Once capped, overflow goes to</label>
-          <select
-            value={overflowGoalId}
-            onChange={e => setOverflowGoalId(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg border border-navy/20 bg-white text-navy font-sans text-sm
-              focus:outline-none focus:ring-2 focus:ring-blue/40"
-          >
-            <option value="">No overflow target</option>
-            {otherGoals.map(g => <option key={g.id} value={g.id}>{g.emoji} {g.name}</option>)}
-          </select>
-        </div>
+          {capAmount !== '' && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-navy">Once capped, overflow goes to</label>
+              <select
+                value={overflowGoalId}
+                onChange={e => setOverflowGoalId(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-navy/20 bg-white text-navy font-sans text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue/40"
+              >
+                <option value="">No overflow target</option>
+                {otherGoals.map(g => <option key={g.id} value={g.id}>{g.emoji} {g.name}</option>)}
+              </select>
+            </div>
+          )}
+        </>
       )}
 
       {error && <p className="text-sm text-orange">{error}</p>}
