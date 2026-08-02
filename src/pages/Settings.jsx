@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { CURRENCIES, LOCALES } from '../lib/constants'
 import PageWrapper from '../components/layout/PageWrapper'
 import Card from '../components/ui/Card'
+import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 
 export default function Settings() {
   const { profile, signOut, refreshProfile } = useAuth()
+  const navigate = useNavigate()
   const { currency, locale, date_format, reload: reloadPreferences } = usePreferences()
   const [name, setName] = useState(profile?.display_name ?? '')
   const [currencyChoice, setCurrencyChoice] = useState(currency)
@@ -62,6 +65,23 @@ export default function Settings() {
     await supabase.auth.mfa.unenroll({ factorId: mfaFactor.id })
     setMfaBusy(false)
     await loadMfaFactor()
+  }
+
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDeleteAccount() {
+    setDeleting(true); setDeleteError('')
+    const { data, error } = await supabase.functions.invoke('delete-account')
+    setDeleting(false)
+    if (error || !data?.success) {
+      setDeleteError("Something went wrong — your account wasn't deleted. Try again.")
+      return
+    }
+    await signOut()
+    navigate('/login')
   }
 
   async function save() {
@@ -195,7 +215,48 @@ export default function Settings() {
           </p>
           <Button variant="ghost" onClick={signOut} className="w-full">Sign out</Button>
         </Card>
+
+        <Card className="border-orange/30">
+          <h2 className="font-serif text-xl text-orange mb-1">Danger zone</h2>
+          <p className="text-sm font-sans text-navy/50 mb-4">
+            Permanently delete your account and everything in it — transactions, accounts, goals, all of it.
+            This can't be undone.
+          </p>
+          <Button
+            variant="ghost"
+            onClick={() => { setDeleteOpen(true); setDeleteConfirmText(''); setDeleteError('') }}
+            className="w-full text-orange hover:bg-orange/5"
+          >
+            Delete my account
+          </Button>
+        </Card>
       </div>
+
+      <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete your account?">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm font-sans text-navy/70">
+            This permanently deletes your login and every transaction, account, category, goal, and setting
+            attached to it. There's no undo. Type <span className="font-semibold text-navy">DELETE</span> to confirm.
+          </p>
+          <Input
+            value={deleteConfirmText}
+            onChange={e => setDeleteConfirmText(e.target.value)}
+            placeholder="DELETE"
+          />
+          {deleteError && <p className="text-sm text-orange">{deleteError}</p>}
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)} className="flex-1">Cancel</Button>
+            <Button
+              variant="cta"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'DELETE' || deleting}
+              className="flex-1"
+            >
+              {deleting ? 'Deleting…' : 'Delete forever'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </PageWrapper>
   )
 }
